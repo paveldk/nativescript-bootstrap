@@ -1,0 +1,7 @@
+{
+	"name": "nativescript-bootstrap",
+	"main": "app.js",
+	"version": "0.0.1",
+	"description": "NativeScript bootstraping template",
+	"author": "Pavel Kolev"
+}
