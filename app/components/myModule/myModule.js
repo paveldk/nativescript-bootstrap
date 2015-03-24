@@ -1,5 +1,5 @@
 var load = require("../../.framework/loader").load,
-    sampleService = load("sampleService"),
+    sampleService = load("myModuleService"),
     viewModel = require("./authentication-view-model"),
     frameModule = require("ui/frame");
 
