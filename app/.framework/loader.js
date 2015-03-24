@@ -50,121 +50,54 @@ function getComponentName(file) {
 }
 
 function loadComponents(componentFolder, componentType, isRoot) {
-    return new Promise(function (resolve) {
-        var that = this;
-        console.log("--------------------------------");
-        console.log("in loading component");
-        console.log(componentFolder.name);
-        console.log(componentFolder.getEntities);
-        console.log("--------------------------------");
+    var that = this;
 
+    componentFolder.eachEntity(function (file) {
+        var component,
+            componentName;
 
-        componentFolder.getEntities()
-            .then(function (files) {
-                console.log("--------------------------------");
-                console.log("in files");
-                console.log("--------------------------------");
+        if (isComponent(file)) {
+            componentName = isRoot ? componentFolder.name : getComponentName(file);
 
-                files.forEach(function (file) {
-                    var component,
-                        componentName;
-
-                    if (isComponent(file)) {
-                        componentName = isRoot ? componentFolder.name : getComponentName(file);
-
-                        console.log("--------------------------------");
-
-                        console.log("loading: " + components[componentType]._basePath + "/" + componentName + "/" +
-                            file.name.slice(0, -components[componentType]._fileExtension.length));
-                        console.log("--------------------------------");
-
-                        try {
-                            component = require(components[componentType]._basePath + "/" + componentName + "/" +
-                                file.name.slice(0, -components[componentType]._fileExtension.length));
-                            components[componentType][componentName] = component;
-                            console.log("--------------------------------");
-                            console.log("loadinged finally");
-                            console.log("--------------------------------");
-                        } catch (variable) {
-                            throw new Error("Loader: load - requested component does not exist - " + file.name);
-                        }
-                    }
-                    console.log("--------------------------------");
-                    console.log("not loading: " + file.name);
-                    console.log("--------------------------------");
-                });
-                console.log("RRRRREESSSOOOOOLLLLVVIIING");
-                resolve(true);
-            }, function (error) {
-                // Failed to obtain folder's contents.
-                console.log("--------------------------------");
-                console.log(error.message);
-                console.log("--------------------------------");
-                resolve(true);
-            });
-
-        console.log("--------------------------------");
-        console.log("THIIIIS ISSSS the end....");
-        console.log("--------------------------------");
+            try {
+                component = require(components[componentType]._basePath + "/" + componentName + "/" +
+                    file.name.slice(0, -components[componentType]._fileExtension.length));
+                components[componentType][componentName] = component;
+            } catch (variable) {
+                throw new Error("Loader: load - requested component does not exist - " + file.name);
+            }
+        }
     });
 }
 
 function loadProviders() {
-    return new Promise(function (resolve) {
-        var isRoot = true,
-            providersFolder = currentAppFolder.getFolder(_consts.providersLocation);
+    var isRoot = true,
+        providersFolder = currentAppFolder.getFolder(_consts.providersLocation);
 
-        loadComponents(providersFolder, "provider", isRoot)
-            .then(function () {
-
-                console.log("--------------------------------");
-                console.log("providersLoaded");
-                console.log("--------------------------------");
-                resolve(true);
-            });
-    });
+    loadComponents(providersFolder, "provider", isRoot);
 }
 
 function loadServices() {
-    return new Promise(function (resolve, reject) {
-        var isRoot = false,
-            componentsFolder = currentAppFolder.getFolder(_consts.componentsLocation);
+    var isRoot = false,
+        componentsFolder = currentAppFolder.getFolder(_consts.componentsLocation);
 
-        console.log("-------------folderche------------");
-        console.log(componentsFolder.contains("authentication"));
-        console.log("--------------------------------");
+    componentsFolder.eachEntity(function (component) {
+        var componentFolder = currentAppFolder.getFolder(_consts.componentsLocation + "/" + component.name);
 
-        componentsFolder.getEntities().then(function (components) {
-
-            components.forEach(function (component) {
-                var componentFolder = currentAppFolder.getFolder(_consts.componentsLocation + "/" + component.name);
-
-                loadComponents(componentFolder, "service", isRoot)
-                    .then(function () {
-                        resolve(true);
-                    });
-            });
-
-        });
+        loadComponents(componentFolder, "service", isRoot);
     });
 }
 
 Loader = Class.extend({
     prepare: function () {
-        return new Promise(function (resolve) {
-            if (isPrepared) {
-                resolve(true);
-            }
+        if (isPrepared) {
+            resolve(true);
+        }
 
-            loadProviders().then(function () {
-                loadServices().then(function () {
-                    console.log("JEEEEROOOONIIIIIMOOOOO");
-                    resolve(true);
-                });
-            });
+        loadProviders();
+        loadServices();
 
-            isPrepared = true;
-        });
+        isPrepared = true;
     },
 
     load: function (component) {
