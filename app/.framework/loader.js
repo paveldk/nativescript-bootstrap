@@ -54,17 +54,19 @@ function loadComponents(componentFolder, componentType, isRoot) {
 
     componentFolder.eachEntity(function (file) {
         var component,
-            componentName;
+            componentRoot,
+            componentName = getComponentName(file);
 
         if (isComponent(file)) {
-            componentName = isRoot ? componentFolder.name : getComponentName(file);
+            componentRoot = isRoot ? componentFolder.name : componentName;
 
             try {
-                component = require(components[componentType]._basePath + "/" + componentName + "/" +
+                component = require(components[componentType]._basePath + "/" + componentRoot + "/" +
                     file.name.slice(0, -components[componentType]._fileExtension.length));
+
                 components[componentType][componentName] = component;
             } catch (variable) {
-                throw new Error("Loader: load - requested component does not exist - " + file.name);
+                throw new Error("Loader: preload - requested component does not exist - " + file.name);
             }
         }
     });
